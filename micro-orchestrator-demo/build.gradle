@@ -1,0 +1,121 @@
+/*
+ * Copyright 2020-2022 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+plugins {
+    id 'org.springframework.boot' version "${springBootVersion}"
+    id 'io.spring.dependency-management' version "${dependencyManagementVersion}"
+    id 'application'
+    id 'jacoco'
+}
+
+apply from: '../gradle/common.gradle'
+apply from: '../gradle/docker.gradle'
+
+ext {
+    set('imagePrefix', 'credittransfer')
+    set('dockerRegistry', 'docker-registry:5000')
+}
+
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+
+application {
+    mainClassName = 'hu.perit.microorchestrator.Application'
+    // Some JVM options already set in common.gradle
+    applicationDefaultJvmArgs += ['-Xmx512m', '-Xms32m']
+}
+
+
+dependencies {
+    implementation 'hu.perit.spvitamin:spvitamin-core'
+    implementation 'hu.perit.spvitamin:spvitamin-spring-admin'
+    implementation 'hu.perit.spvitamin:spvitamin-spring-general'
+    implementation 'hu.perit.spvitamin:spvitamin-spring-logging'
+    implementation 'hu.perit.spvitamin:spvitamin-spring-server'
+    implementation 'hu.perit.spvitamin:spvitamin-spring-data'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    integtestCompileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    integtestAnnotationProcessor 'org.projectlombok:lombok'
+
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Validation
+    implementation 'org.hibernate:hibernate-validator:8.0.1.Final'
+
+    // Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.3'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.0.3'
+
+    // apache.commons
+    implementation 'org.apache.commons:commons-lang3:3.10'
+    implementation 'org.apache.commons:commons-collections4:4.3'
+
+    // Mapstruct
+    implementation 'org.mapstruct:mapstruct:1.5.3.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.3.Final'
+
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Runtime dependencies
+    //------------------------------------------------------------------------------------------------------------------
+    // H2
+    runtimeOnly 'com.h2database:h2'
+    // PostgreSQL
+    //runtimeOnly 'org.postgresql:postgresql'
+
+    // Micrometer Prometheus plugin
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Test dependencies
+    //------------------------------------------------------------------------------------------------------------------
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    //testImplementation 'org.springframework.security:spring-security-test'
+
+    integtestRuntimeOnly 'com.h2database:h2'
+    //integtestRuntimeOnly 'org.postgresql:postgresql'
+}
+
+
+dependencyManagement {
+    imports {
+        mavenBom "hu.perit.spvitamin:spvitamin-dependencies:${spvitaminVersion}"
+    }
+}
+
+
+test {
+    useJUnitPlatform()
+}
+
+
+dockerImage() {
+    dependsOn 'dockerBackendImage'
+}

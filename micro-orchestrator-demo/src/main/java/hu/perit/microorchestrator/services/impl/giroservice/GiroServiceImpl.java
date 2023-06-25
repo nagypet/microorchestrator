@@ -13,9 +13,11 @@ import hu.perit.spvitamin.spring.exception.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -39,12 +41,19 @@ public class GiroServiceImpl implements GiroService
 
     @Override
     @Transactional(rollbackOn = RuntimeException.class)
-    public void execute(Long transactionId) throws CreditTransferException, ResourceNotFoundException
+    public void execute(Long giroId) throws CreditTransferException, ResourceNotFoundException
     {
-        CreditTransferEntity creditTransferEntity = findById(transactionId);
+        CreditTransferEntity creditTransferEntity = findById(giroId);
 
         try
         {
+            // --------------- TEST CODE -------------------------------------------------------------------------------
+            if (BooleanUtils.isTrue(creditTransferEntity.getForceGiroException()))
+            {
+                throw new CreditTransferException("forced exception by input");
+            }
+            // --------------- TEST CODE -------------------------------------------------------------------------------
+
             this.accountService.transfer(this.mapper.fromEntity(creditTransferEntity));
             creditTransferEntity.setStatus(CreditTransferStatus.EXECUTED);
         }
@@ -59,6 +68,18 @@ public class GiroServiceImpl implements GiroService
 
         log.info(MessageFormat.format("Credit transfer executed: {0}", creditTransferEntity));
         this.repo.save(creditTransferEntity);
+    }
+
+    @Override
+    public void dumpTransactions()
+    {
+        List<CreditTransferEntity> all = this.repo.findAll();
+        log.debug("----------------------------------------------------------------------------------------------------------");
+        for (CreditTransferEntity entity : all)
+        {
+            log.debug(entity.toString());
+        }
+        log.debug("----------------------------------------------------------------------------------------------------------");
     }
 
     private CreditTransferEntity findById(Long transactionId) throws ResourceNotFoundException

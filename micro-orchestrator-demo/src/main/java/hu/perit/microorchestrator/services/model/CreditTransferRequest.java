@@ -10,4 +10,5 @@ public class CreditTransferRequest
     private final String debitorIban;
     private final String creditorIban;
     private final BigDecimal amount;
+    private Boolean forceGiroException;
 }

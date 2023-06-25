@@ -8,5 +8,8 @@ public interface GiroService
 {
     Long save(CreditTransferRequest request);
 
-    void execute(Long transactionId) throws CreditTransferException, ResourceNotFoundException;
+    void execute(Long giroId) throws CreditTransferException, ResourceNotFoundException;
+
+    // For unit testing only
+    void dumpTransactions();
 }

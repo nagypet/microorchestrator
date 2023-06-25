@@ -23,7 +23,7 @@ public class CustomerServiceImpl implements CustomerService
     static
     {
         CUSTOMERS.add(new CustomerDto("bank", "Bank", Constants.BANK_USER_ID, List.of(Constants.BANK_IBAN)));
-        CUSTOMERS.add(new CustomerDto("peter", "Peter", 10002L, List.of(Constants.PETER_IBAN_1, Constants.PETER_IBAN_2)));
+        CUSTOMERS.add(new CustomerDto("peter", "Peter", Constants.PETER_USER_ID, List.of(Constants.PETER_IBAN_1, Constants.PETER_IBAN_2)));
         CUSTOMERS.add(new CustomerDto("alice", "Alice", 10003L, List.of("HU1234000010003001")));
         CUSTOMERS.add(new CustomerDto("john", "John", 10004L, List.of("HU1234000010004001")));
         CUSTOMERS.add(new CustomerDto("csaba", "Csaba", 10005L, List.of("HU1234000010005001")));

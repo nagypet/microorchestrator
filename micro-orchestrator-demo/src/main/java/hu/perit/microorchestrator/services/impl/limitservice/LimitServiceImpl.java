@@ -10,12 +10,22 @@ import java.util.Map;
 @Service
 public class LimitServiceImpl implements LimitService
 {
+    public static final BigDecimal MAX_LIMIT = new BigDecimal("1000");
+
     private final Map<Long, BigDecimal> limits = new HashMap<>();
+
+    @Override
+    public boolean checkLimit(Long userId, BigDecimal amount)
+    {
+        this.limits.putIfAbsent(userId, MAX_LIMIT);
+        BigDecimal limit = this.limits.get(userId);
+        return limit.compareTo(amount) >= 0;
+    }
 
     @Override
     public boolean decreaseLimit(Long userId, BigDecimal amount)
     {
-        this.limits.putIfAbsent(userId, new BigDecimal("1000"));
+        this.limits.putIfAbsent(userId, MAX_LIMIT);
         BigDecimal limit = this.limits.get(userId);
         BigDecimal newLimit = limit.subtract(amount);
         if (newLimit.compareTo(BigDecimal.ZERO) < 0)
@@ -37,5 +47,16 @@ public class LimitServiceImpl implements LimitService
         BigDecimal limit = this.limits.get(userId);
         BigDecimal newLimit = limit.add(amount);
         this.limits.put(userId, newLimit);
+    }
+
+    @Override
+    public BigDecimal getRemainingLimit(Long userId)
+    {
+        if (!this.limits.containsKey(userId))
+        {
+            return MAX_LIMIT;
+        }
+
+        return this.limits.get(userId);
     }
 }

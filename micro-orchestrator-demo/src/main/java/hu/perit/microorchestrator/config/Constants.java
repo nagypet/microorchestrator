@@ -37,6 +37,7 @@ public class Constants {
     public static final int USER_API_DELETE_ROLE = 7;
 
     public static final long BANK_USER_ID = 10001;
+    public static final long PETER_USER_ID = 10002;
 
     public static final String BANK_IBAN = "HU1234000010001001";
     public static final String PETER_IBAN_1 = "HU1234000010002001";

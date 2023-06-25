@@ -36,6 +36,9 @@ public class CreditTransferEntity
     @Column(nullable = false)
     private Long statusCode;
 
+    @Column
+    private Boolean forceGiroException;
+
     private String errorText;
 
     // For optimistic locking

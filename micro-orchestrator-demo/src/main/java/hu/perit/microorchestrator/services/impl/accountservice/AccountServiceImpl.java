@@ -11,12 +11,8 @@ import hu.perit.microorchestrator.services.model.Accounts;
 import hu.perit.microorchestrator.services.model.CreditTransferRequest;
 import hu.perit.microorchestrator.services.model.CustomerDto;
 import hu.perit.microorchestrator.services.model.LockMode;
-import hu.perit.spvitamin.core.StackTracer;
 import hu.perit.spvitamin.core.typehelpers.LongUtils;
-import hu.perit.spvitamin.spring.config.SpringContext;
 import hu.perit.spvitamin.spring.exception.ResourceNotFoundException;
-import hu.perit.spvitamin.spring.security.AuthenticatedUser;
-import hu.perit.spvitamin.spring.security.auth.AuthorizationService;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +28,6 @@ import java.util.Optional;
 @Slf4j
 public class AccountServiceImpl implements AccountService
 {
-    private final AuthorizationService authorizationService;
     private final CustomerService customerService;
     private final AccountRepo accountRepo;
     private final AccountMapper accountMapper;
@@ -41,25 +36,17 @@ public class AccountServiceImpl implements AccountService
     @PostConstruct
     void init()
     {
-        for (String username : this.customerService.getUsernames())
+        for (CustomerDto customerDto : this.customerService.getCustomers())
         {
-            try
-            {
-                initAccountsForCustomer(this.customerService.getCustomerByUsername(username));
-            }
-            catch (ResourceNotFoundException e)
-            {
-               log.error(StackTracer.toString(e));
-            }
+            initAccountsForCustomer(customerDto);
         }
     }
 
 
     @Override
-    public Accounts getCustomerAccountsWithBalance() throws ResourceNotFoundException
+    public Accounts getCustomerAccountsWithBalance(Long userId) throws ResourceNotFoundException
     {
-        AuthenticatedUser authenticatedUser = this.authorizationService.getAuthenticatedUser();
-        CustomerDto customerDto = this.customerService.getCustomerByUsername(authenticatedUser.getUsername());
+        CustomerDto customerDto = this.customerService.getCustomerById(userId);
         Accounts accounts = new Accounts();
         for (String iban : customerDto.getAccounts())
         {

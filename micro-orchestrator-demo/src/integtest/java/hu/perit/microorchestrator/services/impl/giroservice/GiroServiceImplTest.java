@@ -3,11 +3,9 @@ package hu.perit.microorchestrator.services.impl.giroservice;
 import hu.perit.microorchestrator.config.Constants;
 import hu.perit.microorchestrator.exception.CreditTransferException;
 import hu.perit.microorchestrator.services.api.AccountService;
-import hu.perit.microorchestrator.services.api.CustomerService;
 import hu.perit.microorchestrator.services.api.GiroService;
 import hu.perit.microorchestrator.services.model.CreditTransferRequest;
 import hu.perit.spvitamin.spring.exception.ResourceNotFoundException;
-import hu.perit.spvitamin.spring.security.auth.AuthorizationService;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -23,13 +21,7 @@ import java.math.BigDecimal;
 public class GiroServiceImplTest
 {
     @Autowired
-    private CustomerService customerService;
-
-    @Autowired
     private AccountService accountService;
-
-    @Autowired
-    private AuthorizationService authorizationService;
 
     @Autowired
     private GiroService giroService;

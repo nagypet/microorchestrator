@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 
 public interface AccountService
 {
-    Accounts getCustomerAccountsWithBalance() throws ResourceNotFoundException;
+    Accounts getCustomerAccountsWithBalance(Long userId) throws ResourceNotFoundException;
 
     BigDecimal getBalance(String iban) throws ResourceNotFoundException;
 

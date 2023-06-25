@@ -1,67 +1,50 @@
 package hu.perit.microorchestrator.services.impl.accountservice;
 
-import hu.perit.microorchestrator.db.microorchestratordb.repo.AccountRepo;
-import hu.perit.microorchestrator.db.microorchestratordb.table.AccountEntity;
+import hu.perit.microorchestrator.db.repo.AccountRepo;
+import hu.perit.microorchestrator.db.table.AccountEntity;
+import hu.perit.microorchestrator.mapper.AccountMapper;
 import hu.perit.microorchestrator.services.api.AccountService;
-import hu.perit.microorchestrator.services.model.CreditTransferException;
-import hu.perit.microorchestrator.services.model.CreditTransferRequest;
-import hu.perit.microorchestrator.services.model.LockMode;
+import hu.perit.microorchestrator.services.api.CustomerService;
+import hu.perit.microorchestrator.services.model.CustomerDto;
+import hu.perit.microorchestrator.services.model.AccountDto;
+import hu.perit.microorchestrator.services.model.Accounts;
 import hu.perit.spvitamin.spring.exception.ResourceNotFoundException;
+import hu.perit.spvitamin.spring.security.AuthenticatedUser;
+import hu.perit.spvitamin.spring.security.auth.AuthorizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.text.MessageFormat;
-import java.util.Optional;
-
 
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService
 {
-    private final AccountRepo repo;
+    private final AuthorizationService authorizationService;
+    private final CustomerService customerService;
+    private final AccountRepo accountRepo;
+    private final AccountMapper accountMapper;
 
     @Override
-    @Transactional(rollbackFor = RuntimeException.class)
-    public void transfer(CreditTransferRequest request) throws ResourceNotFoundException, CreditTransferException
+    public Accounts getCustomerAccountsWithBalance() throws ResourceNotFoundException
     {
-        // Using a write lock so that parallel transaction with the same debitor account have to wait until this
-        // transaction completes. No optimistic locking used.
-        AccountEntity debitorAccount = getAccountByIban(request.getDebitorIban(), LockMode.FOR_UPDATE);
-
-        // Using optimistic locking here, in order to avoid deadlocks. But the caller must be aware of
-        // OptimisticLockingException and retry the transaction in such cases
-        AccountEntity creditorAccount = getAccountByIban(request.getCreditorIban(), LockMode.FOR_READ);
-
-        BigDecimal amount = request.getAmount();
-        if (!debitorAccount.withdraw(amount))
+        AuthenticatedUser authenticatedUser = this.authorizationService.getAuthenticatedUser();
+        CustomerDto customerDto = this.customerService.getCustomerByUsername(authenticatedUser.getUsername());
+        Accounts accounts = new Accounts();
+        for (String iban : customerDto.getAccounts())
         {
-            // Throwing business-related exception, there is no rollback to allow the external transaction to commit
-            throw new CreditTransferException("There is no sufficient account coverage!");
+            AccountEntity accountEntity = this.accountRepo.findByIban(iban).orElse(null);
+            if (accountEntity == null)
+            {
+                // Let's create a new AccountEntity
+                accountEntity = new AccountEntity();
+                accountEntity.setIban(iban);
+                accountEntity.setOwnersName(customerDto.getName());
+                accountEntity.setBalance(BigDecimal.ZERO);
+                this.accountRepo.save(accountEntity);
+            }
+            accounts.addAccount(this.accountMapper.fromEntity(accountEntity));
         }
-        creditorAccount.deposit(amount);
-
-        // Save the account balances
-        this.repo.save(debitorAccount);
-
-        // This may throw OptimisticLockingException, if a parallel transaction would also try to deposit money into
-        // the same creditor account
-        this.repo.save(creditorAccount);
-    }
-
-
-    @Override
-    public AccountEntity getAccountByIban(String iban, LockMode lockMode) throws ResourceNotFoundException
-    {
-        Optional<AccountEntity> entity = (lockMode == LockMode.FOR_UPDATE) ?
-                this.repo.findByIbanWithWriteLock(iban) :
-                this.repo.findByIban(iban);
-        if (entity.isEmpty())
-        {
-            throw new ResourceNotFoundException(MessageFormat.format("No account found by iban {0}", iban));
-        }
-
-        return entity.get();
+        return accounts;
     }
 }

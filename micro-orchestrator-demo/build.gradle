@@ -49,6 +49,7 @@ dependencies {
     implementation 'hu.perit.spvitamin:spvitamin-spring-general'
     implementation 'hu.perit.spvitamin:spvitamin-spring-logging'
     implementation 'hu.perit.spvitamin:spvitamin-spring-server'
+    implementation 'hu.perit.spvitamin:spvitamin-spring-security'
     implementation 'hu.perit.spvitamin:spvitamin-spring-data'
 
     // Lombok
@@ -61,9 +62,13 @@ dependencies {
 
     // Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // JJWT
+    implementation 'io.jsonwebtoken:jjwt:0.9.1'
 
     // Validation
     implementation 'org.hibernate:hibernate-validator:8.0.1.Final'
@@ -86,8 +91,6 @@ dependencies {
     //------------------------------------------------------------------------------------------------------------------
     // H2
     runtimeOnly 'com.h2database:h2'
-    // PostgreSQL
-    //runtimeOnly 'org.postgresql:postgresql'
 
     // Micrometer Prometheus plugin
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
@@ -100,7 +103,6 @@ dependencies {
     //testImplementation 'org.springframework.security:spring-security-test'
 
     integtestRuntimeOnly 'com.h2database:h2'
-    //integtestRuntimeOnly 'org.postgresql:postgresql'
 }
 
 

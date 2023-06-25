@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package hu.perit.microorchestrator.db.microorchestratordb;
+package hu.perit.microorchestrator.db;
 
 import hu.perit.spvitamin.spring.data.config.DatasourceCollectionProperties;
 import hu.perit.spvitamin.spring.data.dynamicdatasource.ConnectionParam;
@@ -54,7 +54,7 @@ import java.util.Map;
 @Slf4j
 public class DbConfig
 {
-    static final String PACKAGES = "hu.perit.microorchestrator.db.microorchestratordb";
+    static final String PACKAGES = "hu.perit.microorchestrator.db";
     public static final String ENTITY_MANAGER_FACTORY = "entityManagerFactory";
     static final String TRANSACTION_MANAGER = "transactionManager";
 

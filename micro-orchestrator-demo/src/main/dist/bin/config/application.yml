@@ -48,6 +48,13 @@ server:
   port: 8400
   ssl:
     enabled: false
+    key-store: classpath:jks/server-keystore.jks
+    key-store-password: changeit
+    key-alias: templatekey
+    key-password: changeit
+
+    trust-store: classpath:jks/client-truststore.jks
+    trust-store-password: changeit
 
   error:
     includeException: true
@@ -84,17 +91,29 @@ security:
 localuser:
   admin:
     password: admin
+  peter:
+    password: peter
+  alice:
+    password: alice
+  john:
+    password: john
+  csaba:
+    password: csaba
+  szabolcs:
+    password: szabolcs
 
 
 #-----------------------------------------------------------------------------------------------------------------------
 # AD group -> role mapping (all = '*')
 #-----------------------------------------------------------------------------------------------------------------------
-# admin
 roles:
   ROLE_ADMIN:
    groups: Admin
-   #roles.ROLE_ADMIN.includes=
+   includes: ROLE_CUSTOMER
    users: admin
+  ROLE_CUSTOMER:
+    groups: Customer
+    users: peter, alice, john, csaba, szabolcs
 
 
 #-----------------------------------------------------------------------------------------------------------------------
@@ -105,6 +124,16 @@ roles:
 
 # PUBLIC
 #rolemap.ROLE_PUBLIC=BOOK_READ_ACCESS,AUTHOR_READ_ACCESS
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# JWT token
+#-----------------------------------------------------------------------------------------------------------------------
+jwt:
+  private-key-alias: templatekey
+  private-key-encryptedPassword: jdP5CKDIu5v2VUafF33pPQ==
+  public-key-alias: templatekey
+  expiration-in-minutes: 60
 
 
 #-----------------------------------------------------------------------------------------------------------------------

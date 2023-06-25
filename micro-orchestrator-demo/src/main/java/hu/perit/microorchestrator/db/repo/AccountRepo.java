@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package hu.perit.microorchestrator.db.microorchestratordb.repo;
+package hu.perit.microorchestrator.db.repo;
 
-import hu.perit.microorchestrator.db.microorchestratordb.table.AccountEntity;
+import hu.perit.microorchestrator.db.table.AccountEntity;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
-import jakarta.persistence.LockModeType;
 import java.util.Optional;
 
 /**
@@ -30,9 +30,5 @@ import java.util.Optional;
 
 public interface AccountRepo extends JpaRepository<AccountEntity, Long>
 {
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query(value = "select e from AccountEntity e where e.iban = :iban")
-    Optional<AccountEntity> findByIbanWithWriteLock(String iban);
-
     Optional<AccountEntity> findByIban(String iban);
 }

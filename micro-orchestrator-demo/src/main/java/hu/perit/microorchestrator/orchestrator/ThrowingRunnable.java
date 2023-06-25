@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package hu.perit.microorchestrator.services.api;
+package hu.perit.microorchestrator.orchestrator;
 
-import hu.perit.spvitamin.spring.auth.AuthorizationToken;
-
-public interface AuthService
+public interface ThrowingRunnable
 {
-    AuthorizationToken login();
+    void execute() throws Exception;
 }

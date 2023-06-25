@@ -1,6 +1,24 @@
+/*
+ * Copyright 2020-2023 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package hu.perit.microorchestrator.services.impl.credittransferservice;
 
 import hu.perit.microorchestrator.exception.CreditTransferException;
+import hu.perit.microorchestrator.orchestrator.MicroOrchestrator;
+import hu.perit.microorchestrator.orchestrator.ProcessStep;
 import hu.perit.microorchestrator.services.api.*;
 import hu.perit.microorchestrator.services.model.*;
 import hu.perit.spvitamin.core.typehelpers.LongUtils;
@@ -67,7 +85,7 @@ public class CreditTransferServiceImpl implements CreditTransferService
     }
 
     @Override
-    public ExecuteCreditTransferResponse executeCreditTransfer(ExecuteCreditTransferRequest executeRequest) throws CreditTransferException, ResourceNotFoundException
+    public ExecuteCreditTransferResponse executeCreditTransfer(ExecuteCreditTransferRequest executeRequest) throws Exception
     {
         AuthenticatedUser authenticatedUser = this.authorizationService.getAuthenticatedUser();
 
@@ -84,23 +102,26 @@ public class CreditTransferServiceImpl implements CreditTransferService
             throw new CreditTransferException("User does not have right to execute this transaction!");
         }
 
-        // Decrease limit
-        if (!this.limitService.decreaseLimit(authenticatedUser.getUserId(), creditTransferCacheData.getAmount()))
-        {
-            throw new CreditTransferException("Daily limit is exceeded!");
-        }
+        MicroOrchestrator orchestrator = new MicroOrchestrator();
+
+        // Changing limit
+        orchestrator.addStep(new ProcessStep("Changing limit")
+                .action(() -> {
+                    if (!this.limitService.decreaseLimit(authenticatedUser.getUserId(), creditTransferCacheData.getAmount()))
+                    {
+                        throw new CreditTransferException("Daily limit is exceeded!");
+                    }
+                })
+                .undoAction(() -> {
+                    // This is the corrective action after an exception has been thrown
+                    this.limitService.increaseLimit(authenticatedUser.getUserId(), creditTransferCacheData.getAmount());
+                }));
 
         // Execute credit transfer
-        try
-        {
-            this.giroService.execute(creditTransferCacheData.getGiroId());
-        }
-        catch (RuntimeException | CreditTransferException | ResourceNotFoundException e)
-        {
-            // This is the corrective action after an exception has been thrown
-            this.limitService.increaseLimit(authenticatedUser.getUserId(), creditTransferCacheData.getAmount());
-            throw e;
-        }
+        orchestrator.addStep(new ProcessStep("Executing credit transfer")
+                .action(() -> this.giroService.execute(creditTransferCacheData.getGiroId())));
+
+        orchestrator.execute();
 
         return new ExecuteCreditTransferResponse(ZonedDateTime.now());
     }

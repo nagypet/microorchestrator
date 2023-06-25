@@ -97,6 +97,7 @@ public class CreditTransferServiceImpl implements CreditTransferService
         }
         catch (RuntimeException | CreditTransferException | ResourceNotFoundException e)
         {
+            // This is the corrective action after an exception has been thrown
             this.limitService.increaseLimit(authenticatedUser.getUserId(), creditTransferCacheData.getAmount());
             throw e;
         }

@@ -109,8 +109,11 @@ localuser:
 roles:
   ROLE_ADMIN:
    groups: Admin
-   includes: ROLE_CUSTOMER
    users: admin
+  ROLE_BANK:
+    groups: Bank
+    includes: ROLE_CUSTOMER
+    users: bank
   ROLE_CUSTOMER:
     groups: Customer
     users: peter, alice, john, csaba, szabolcs

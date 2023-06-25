@@ -30,5 +30,9 @@ import java.util.Optional;
 
 public interface AccountRepo extends JpaRepository<AccountEntity, Long>
 {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(value = "select e from AccountEntity e where e.iban = :iban")
+    Optional<AccountEntity> findByIbanWithWriteLock(String iban);
+
     Optional<AccountEntity> findByIban(String iban);
 }

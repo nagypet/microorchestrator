@@ -1,4 +1,4 @@
-package hu.perit.microorchestrator.services.model;
+package hu.perit.microorchestrator.exception;
 
 public class CreditTransferException extends Exception
 {

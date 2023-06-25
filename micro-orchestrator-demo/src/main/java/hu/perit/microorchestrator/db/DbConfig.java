@@ -97,7 +97,7 @@ public class DbConfig
         properties.put(AvailableSettings.ORDER_INSERTS, "true");
         properties.put(AvailableSettings.ORDER_UPDATES, "true");
         //properties.put(AvailableSettings.BATCH_VERSIONED_DATA, "true");
-        properties.put(AvailableSettings.JPA_LOCK_TIMEOUT, "3000");
+        properties.put(AvailableSettings.JAKARTA_LOCK_TIMEOUT, "3000");
 
         return builder.dataSource(dataSource).packages(PACKAGES).persistenceUnit(PERSISTENCE_UNIT).properties(properties).build();
     }

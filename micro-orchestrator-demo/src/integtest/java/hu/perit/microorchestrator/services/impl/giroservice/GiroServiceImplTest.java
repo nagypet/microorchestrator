@@ -17,11 +17,9 @@
 package hu.perit.microorchestrator.services.impl.giroservice;
 
 import hu.perit.microorchestrator.config.Constants;
-import hu.perit.microorchestrator.exception.CreditTransferException;
 import hu.perit.microorchestrator.services.api.AccountService;
 import hu.perit.microorchestrator.services.api.GiroService;
 import hu.perit.microorchestrator.services.model.CreditTransferRequest;
-import hu.perit.spvitamin.spring.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -43,7 +41,7 @@ public class GiroServiceImplTest
     private GiroService giroService;
 
     @Test
-    void saveAndExecute() throws ResourceNotFoundException, CreditTransferException
+    void saveAndExecute() throws Exception
     {
         log.debug("------------------- saveAndExecute ------------------------------------------------------------------");
         BigDecimal origBalanceBank = this.accountService.getBalance(Constants.BANK_IBAN);

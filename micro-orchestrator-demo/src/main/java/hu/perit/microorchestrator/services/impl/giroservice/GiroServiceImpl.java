@@ -18,23 +18,25 @@ package hu.perit.microorchestrator.services.impl.giroservice;
 
 import hu.perit.microorchestrator.db.repo.CreditTransferRepo;
 import hu.perit.microorchestrator.db.table.CreditTransferEntity;
-import hu.perit.microorchestrator.exception.CreditTransferException;
+import hu.perit.microorchestrator.exception.GiroException;
+import hu.perit.microorchestrator.exception.GiroTimeoutException;
 import hu.perit.microorchestrator.mapper.CreditTransferRequestMapper;
 import hu.perit.microorchestrator.services.api.AccountService;
 import hu.perit.microorchestrator.services.api.GiroService;
 import hu.perit.microorchestrator.services.model.CreditTransferRequest;
 import hu.perit.microorchestrator.services.model.CreditTransferStatus;
+import hu.perit.microorchestrator.services.model.ForcedExceptionType;
 import hu.perit.spvitamin.core.StackTracer;
 import hu.perit.spvitamin.spring.exception.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -57,23 +59,34 @@ public class GiroServiceImpl implements GiroService
 
     @Override
     @Transactional(rollbackOn = RuntimeException.class)
-    public void execute(Long giroId) throws CreditTransferException, ResourceNotFoundException
+    public void execute(Long giroId) throws Exception
     {
         CreditTransferEntity creditTransferEntity = findById(giroId);
 
         try
         {
             // --------------- TEST CODE -------------------------------------------------------------------------------
-            if (BooleanUtils.isTrue(creditTransferEntity.getForceGiroException()))
-            {
-                throw new CreditTransferException("forced exception by input");
-            }
+            throwTestGiroException(creditTransferEntity);
             // --------------- TEST CODE -------------------------------------------------------------------------------
 
             this.accountService.transfer(this.mapper.fromEntity(creditTransferEntity));
+
+            // --------------- TEST CODE -------------------------------------------------------------------------------
+            throwTestTimeoutException(creditTransferEntity);
+            // --------------- TEST CODE -------------------------------------------------------------------------------
+
             creditTransferEntity.setStatus(CreditTransferStatus.EXECUTED);
         }
-        catch (RuntimeException | CreditTransferException | ResourceNotFoundException e)
+        catch (GiroTimeoutException e)
+        {
+            // We do not know, it the transfer has been completed or not, because the operation did not complete within
+            // the set timeout.
+            log.error(StackTracer.toString(e));
+            creditTransferEntity.setStatus(CreditTransferStatus.UNKNOWN);
+            creditTransferEntity.setErrorText(e.toString());
+            throw e;
+        }
+        catch (Exception e)
         {
             // Here could be a retry in case of OptimisticLockingException
             log.error(StackTracer.toString(e));
@@ -84,6 +97,33 @@ public class GiroServiceImpl implements GiroService
 
         log.info(MessageFormat.format("Credit transfer executed: {0}", creditTransferEntity));
         this.repo.save(creditTransferEntity);
+    }
+
+    // In this case the transaction is not executed
+    private static void throwTestGiroException(CreditTransferEntity creditTransferEntity) throws GiroException, GiroTimeoutException
+    {
+        if (creditTransferEntity.getForcedExceptionForTesting() == ForcedExceptionType.GIRO_EXCEPTION)
+        {
+            throw new GiroException("Exception forced by input!");
+        }
+    }
+
+    // In this case the transaction might be executed
+    private static void throwTestTimeoutException(CreditTransferEntity creditTransferEntity) throws GiroException, GiroTimeoutException
+    {
+        if (creditTransferEntity.getForcedExceptionForTesting() == ForcedExceptionType.READ_TIMEOUT)
+        {
+            try
+            {
+                TimeUnit.SECONDS.sleep(10);
+            }
+            catch (InterruptedException e)
+            {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
+            throw new GiroTimeoutException("Exception forced by input!");
+        }
     }
 
     @Override

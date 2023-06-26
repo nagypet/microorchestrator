@@ -17,6 +17,7 @@
 package hu.perit.microorchestrator.db.table;
 
 import hu.perit.microorchestrator.services.model.CreditTransferStatus;
+import hu.perit.microorchestrator.services.model.ForcedExceptionType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -53,7 +54,7 @@ public class CreditTransferEntity
     private Long statusCode;
 
     @Column
-    private Boolean forceGiroException;
+    private ForcedExceptionType forcedExceptionForTesting;
 
     private String errorText;
 

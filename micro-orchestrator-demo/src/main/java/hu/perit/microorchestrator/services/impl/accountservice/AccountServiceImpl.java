@@ -19,7 +19,7 @@ package hu.perit.microorchestrator.services.impl.accountservice;
 import hu.perit.microorchestrator.config.Constants;
 import hu.perit.microorchestrator.db.repo.AccountRepo;
 import hu.perit.microorchestrator.db.table.AccountEntity;
-import hu.perit.microorchestrator.exception.CreditTransferException;
+import hu.perit.microorchestrator.exception.GiroException;
 import hu.perit.microorchestrator.mapper.AccountMapper;
 import hu.perit.microorchestrator.services.api.AccountService;
 import hu.perit.microorchestrator.services.api.CustomerService;
@@ -82,7 +82,7 @@ public class AccountServiceImpl implements AccountService
 
     @Override
     @Transactional
-    public void transfer(CreditTransferRequest request) throws ResourceNotFoundException, CreditTransferException
+    public void transfer(CreditTransferRequest request) throws ResourceNotFoundException, GiroException
     {
         // Using a write lock so that parallel transaction with the same debitor account have to wait until this
         // transaction completes. No optimistic locking used.
@@ -96,7 +96,7 @@ public class AccountServiceImpl implements AccountService
         if (!debitorAccount.withdraw(amount))
         {
             // Throwing business-related exception, there is no rollback to allow the external transaction to commit
-            throw new CreditTransferException("There is no sufficient account coverage!");
+            throw new GiroException("There is no sufficient account coverage!");
         }
         creditorAccount.deposit(amount);
 

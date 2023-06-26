@@ -22,21 +22,21 @@ import lombok.extern.slf4j.Slf4j;
 public class ProcessStep
 {
     private final String name;
-    private ThrowingRunnable action;
-    private ThrowingRunnable undoAction;
+    private Action action;
+    private UndoAction undoAction;
 
     public ProcessStep(String name)
     {
         this.name = name;
     }
 
-    public ProcessStep action(ThrowingRunnable action)
+    public ProcessStep action(Action action)
     {
         this.action = action;
         return this;
     }
 
-    public ProcessStep undoAction(ThrowingRunnable action)
+    public ProcessStep undoAction(UndoAction action)
     {
         this.undoAction = action;
         return this;
@@ -51,12 +51,12 @@ public class ProcessStep
         }
     }
 
-    public void executeUndoAction() throws Exception
+    public void executeUndoAction(Exception e)
     {
         log.debug("Rolling back {}", this.name);
         if (this.undoAction != null)
         {
-            this.undoAction.execute();
+            this.undoAction.execute(e);
         }
     }
 }

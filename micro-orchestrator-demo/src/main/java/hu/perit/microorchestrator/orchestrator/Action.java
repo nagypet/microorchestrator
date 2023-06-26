@@ -16,7 +16,7 @@
 
 package hu.perit.microorchestrator.orchestrator;
 
-public interface ThrowingRunnable
+public interface Action
 {
     void execute() throws Exception;
 }

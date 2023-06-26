@@ -16,7 +16,6 @@
 
 package hu.perit.microorchestrator.orchestrator;
 
-import hu.perit.spvitamin.core.StackTracer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -46,7 +45,7 @@ public class MicroOrchestrator
                 if (i > 0)
                 {
                     log.warn("Process step {}/{} thrown exception, rolling back...", i, this.steps.size());
-                    undoAllFrom(i - 1);
+                    undoAllFrom(i - 1, e);
                 }
                 throw e;
             }
@@ -54,19 +53,12 @@ public class MicroOrchestrator
         log.info("{} process step executed successfully", this.steps.size());
     }
 
-    private void undoAllFrom(int from)
+    private void undoAllFrom(int from, Exception e)
     {
         for (int i = from; i >= 0; i--)
         {
             ProcessStep step = this.steps.get(i);
-            try
-            {
-                step.executeUndoAction();
-            }
-            catch (Exception e)
-            {
-                log.error(StackTracer.toString(e));
-            }
+            step.executeUndoAction(e);
         }
     }
 }

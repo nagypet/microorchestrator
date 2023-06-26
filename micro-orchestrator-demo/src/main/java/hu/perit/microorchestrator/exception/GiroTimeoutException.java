@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package hu.perit.microorchestrator.services.model;
+package hu.perit.microorchestrator.exception;
 
-import lombok.Data;
-
-import java.math.BigDecimal;
-
-@Data
-public class CreditTransferRequest
+public class GiroTimeoutException extends Exception
 {
-    private final String debitorIban;
-    private final String creditorIban;
-    private final BigDecimal amount;
-    private ForcedExceptionType forcedExceptionForTesting;
+    public GiroTimeoutException(String message)
+    {
+        super(message);
+    }
 }

@@ -16,7 +16,7 @@
 
 package hu.perit.microorchestrator.services.api;
 
-import hu.perit.microorchestrator.exception.CreditTransferException;
+import hu.perit.microorchestrator.exception.GiroException;
 import hu.perit.microorchestrator.services.model.Accounts;
 import hu.perit.microorchestrator.services.model.CreditTransferRequest;
 import hu.perit.spvitamin.spring.exception.ResourceNotFoundException;
@@ -29,5 +29,5 @@ public interface AccountService
 
     BigDecimal getBalance(String iban) throws ResourceNotFoundException;
 
-    void transfer(CreditTransferRequest request) throws ResourceNotFoundException, CreditTransferException;
+    void transfer(CreditTransferRequest request) throws ResourceNotFoundException, GiroException;
 }

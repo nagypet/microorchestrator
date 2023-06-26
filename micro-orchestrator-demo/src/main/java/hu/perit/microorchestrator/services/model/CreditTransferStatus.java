@@ -26,7 +26,8 @@ public enum CreditTransferStatus
 {
     REQUESTED(1L),
     EXECUTED(2L),
-    FAILED(3L);
+    FAILED(3L),
+    UNKNOWN(4L);
 
     private long code;
     private static Map<Long, CreditTransferStatus> mappings;

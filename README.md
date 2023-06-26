@@ -68,7 +68,7 @@ public ExecuteCreditTransferResponse executeCreditTransfer(ExecuteCreditTransfer
 
     MicroOrchestrator orchestrator = new MicroOrchestrator();
 
-    // Changing limit
+    // STEP 1: Changing limit
     orchestrator.addStep(new ProcessStep("Changing limit")
             .action(() -> {
                 if (!this.limitService.decreaseLimit(authenticatedUser.getUserId(), creditTransferCacheData.getAmount()))
@@ -76,12 +76,16 @@ public ExecuteCreditTransferResponse executeCreditTransfer(ExecuteCreditTransfer
                     throw new CreditTransferException("Daily limit is exceeded!");
                 }
             })
-            .undoAction(() -> {
-                // This is the corrective action after an exception has been thrown
-                this.limitService.increaseLimit(authenticatedUser.getUserId(), creditTransferCacheData.getAmount());
+            .undoAction(e -> {
+                // In case of a timeout we do not know if the transfer will be executed by the backend system
+                if (!(e instanceof GiroTimeoutException))
+                {
+                    // This is the corrective action after an exception has been thrown
+                    this.limitService.increaseLimit(authenticatedUser.getUserId(), creditTransferCacheData.getAmount());
+                }
             }));
 
-    // Execute credit transfer
+    // STEP 2: Execute credit transfer
     orchestrator.addStep(new ProcessStep("Executing credit transfer")
             .action(() -> this.giroService.execute(creditTransferCacheData.getGiroId())));
 

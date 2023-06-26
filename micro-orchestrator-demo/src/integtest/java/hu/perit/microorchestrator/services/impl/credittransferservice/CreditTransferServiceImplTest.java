@@ -101,24 +101,45 @@ class CreditTransferServiceImplTest
     @Test
     void testExecuteOK() throws Exception
     {
-        CreditTransferRequest checkRequest = new CreditTransferRequest(Constants.BANK_IBAN, Constants.PETER_IBAN_1, new BigDecimal("120"));
+        BigDecimal origBalanceBank = this.accountService.getBalance(Constants.BANK_IBAN);
+        BigDecimal origBalancePeter = this.accountService.getBalance(Constants.PETER_IBAN_1);
+        BigDecimal origRemainingLimitBank = this.limitService.getRemainingLimit(Constants.BANK_USER_ID);
+        BigDecimal origRemainingLimitPeter = this.limitService.getRemainingLimit(Constants.PETER_USER_ID);
+
+        BigDecimal amount = new BigDecimal("120");
+        CreditTransferRequest checkRequest = new CreditTransferRequest(Constants.BANK_IBAN, Constants.PETER_IBAN_1, amount);
         CheckCreditTransferResponse checkResponse = this.creditTransferService.checkCreditTransfer(checkRequest);
         assertThat(checkResponse.getTransactionHash()).isNotNull();
         ExecuteCreditTransferResponse executeResponse = this.creditTransferService.executeCreditTransfer(new ExecuteCreditTransferRequest(checkResponse.getTransactionHash()));
         log.debug(executeResponse.toString());
         assertThat(executeResponse.getTimestamp()).isNotNull();
-        log.debug("Balance of {}: {}", Constants.BANK_IBAN, this.accountService.getBalance(Constants.BANK_IBAN).toString());
-        log.debug("Balance of {}: {}", Constants.PETER_IBAN_1, this.accountService.getBalance(Constants.PETER_IBAN_1).toString());
-        log.debug("Remaining limit of {}: {}", Constants.BANK_USER_ID, this.limitService.getRemainingLimit(Constants.BANK_USER_ID).toString());
-        log.debug("Remaining limit of {}: {}", Constants.PETER_USER_ID, this.limitService.getRemainingLimit(Constants.PETER_USER_ID).toString());
+
+        BigDecimal balanceBank = this.accountService.getBalance(Constants.BANK_IBAN);
+        BigDecimal balancePeter = this.accountService.getBalance(Constants.PETER_IBAN_1);
+        BigDecimal remainingLimitBank = this.limitService.getRemainingLimit(Constants.BANK_USER_ID);
+        BigDecimal remainingLimitPeter = this.limitService.getRemainingLimit(Constants.PETER_USER_ID);
+        log.debug("Balance of {}: {}", Constants.BANK_IBAN, balanceBank.toString());
+        log.debug("Balance of {}: {}", Constants.PETER_IBAN_1, balancePeter.toString());
+        log.debug("Remaining limit of {}: {}", Constants.BANK_USER_ID, remainingLimitBank.toString());
+        log.debug("Remaining limit of {}: {}", Constants.PETER_USER_ID, remainingLimitPeter.toString());
+        assertThat(balanceBank).isEqualTo(origBalanceBank.subtract(amount));
+        assertThat(balancePeter).isEqualTo(origBalancePeter.add(amount));
+        assertThat(remainingLimitBank).isEqualTo(origRemainingLimitBank.subtract(amount));
+        assertThat(remainingLimitPeter).isEqualTo(origRemainingLimitPeter);
         this.giroService.dumpTransactions();
     }
 
     @Test
     void testExecuteWithGiroException() throws CreditTransferException, ResourceNotFoundException
     {
-        CreditTransferRequest checkRequest = new CreditTransferRequest(Constants.BANK_IBAN, Constants.PETER_IBAN_1, new BigDecimal("120"));
-        checkRequest.setForceGiroException(Boolean.TRUE);
+        BigDecimal origBalanceBank = this.accountService.getBalance(Constants.BANK_IBAN);
+        BigDecimal origBalancePeter = this.accountService.getBalance(Constants.PETER_IBAN_1);
+        BigDecimal origRemainingLimitBank = this.limitService.getRemainingLimit(Constants.BANK_USER_ID);
+        BigDecimal origRemainingLimitPeter = this.limitService.getRemainingLimit(Constants.PETER_USER_ID);
+
+        BigDecimal amount = new BigDecimal("120");
+        CreditTransferRequest checkRequest = new CreditTransferRequest(Constants.BANK_IBAN, Constants.PETER_IBAN_1, amount);
+        checkRequest.setForcedExceptionForTesting(ForcedExceptionType.GIRO_EXCEPTION);
         CheckCreditTransferResponse checkResponse = this.creditTransferService.checkCreditTransfer(checkRequest);
         assertThat(checkResponse.getTransactionHash()).isNotNull();
         try
@@ -131,10 +152,58 @@ class CreditTransferServiceImplTest
         {
             log.error(StackTracer.toString(e));
         }
-        log.debug("Balance of {}: {}", Constants.BANK_IBAN, this.accountService.getBalance(Constants.BANK_IBAN).toString());
-        log.debug("Balance of {}: {}", Constants.PETER_IBAN_1, this.accountService.getBalance(Constants.PETER_IBAN_1).toString());
-        log.debug("Remaining limit of {}: {}", Constants.BANK_USER_ID, this.limitService.getRemainingLimit(Constants.BANK_USER_ID).toString());
-        log.debug("Remaining limit of {}: {}", Constants.PETER_USER_ID, this.limitService.getRemainingLimit(Constants.PETER_USER_ID).toString());
+
+        BigDecimal balanceBank = this.accountService.getBalance(Constants.BANK_IBAN);
+        BigDecimal balancePeter = this.accountService.getBalance(Constants.PETER_IBAN_1);
+        BigDecimal remainingLimitBank = this.limitService.getRemainingLimit(Constants.BANK_USER_ID);
+        BigDecimal remainingLimitPeter = this.limitService.getRemainingLimit(Constants.PETER_USER_ID);
+        log.debug("Balance of {}: {}", Constants.BANK_IBAN, balanceBank.toString());
+        log.debug("Balance of {}: {}", Constants.PETER_IBAN_1, balancePeter.toString());
+        log.debug("Remaining limit of {}: {}", Constants.BANK_USER_ID, remainingLimitBank.toString());
+        log.debug("Remaining limit of {}: {}", Constants.PETER_USER_ID, remainingLimitPeter.toString());
+        assertThat(balanceBank).isEqualTo(origBalanceBank);
+        assertThat(balancePeter).isEqualTo(origBalancePeter);
+        assertThat(remainingLimitBank).isEqualTo(origRemainingLimitBank);
+        assertThat(remainingLimitPeter).isEqualTo(origRemainingLimitPeter);
+        this.giroService.dumpTransactions();
+    }
+
+    @Test
+    void testExecuteWithTimeoutException() throws CreditTransferException, ResourceNotFoundException
+    {
+        BigDecimal origBalanceBank = this.accountService.getBalance(Constants.BANK_IBAN);
+        BigDecimal origBalancePeter = this.accountService.getBalance(Constants.PETER_IBAN_1);
+        BigDecimal origRemainingLimitBank = this.limitService.getRemainingLimit(Constants.BANK_USER_ID);
+        BigDecimal origRemainingLimitPeter = this.limitService.getRemainingLimit(Constants.PETER_USER_ID);
+
+        BigDecimal amount = new BigDecimal("120");
+        CreditTransferRequest checkRequest = new CreditTransferRequest(Constants.BANK_IBAN, Constants.PETER_IBAN_1, amount);
+        checkRequest.setForcedExceptionForTesting(ForcedExceptionType.READ_TIMEOUT);
+        CheckCreditTransferResponse checkResponse = this.creditTransferService.checkCreditTransfer(checkRequest);
+        assertThat(checkResponse.getTransactionHash()).isNotNull();
+        try
+        {
+            ExecuteCreditTransferResponse executeResponse = this.creditTransferService.executeCreditTransfer(new ExecuteCreditTransferRequest(checkResponse.getTransactionHash()));
+            log.debug(executeResponse.toString());
+            assertThat(executeResponse.getTimestamp()).isNotNull();
+        }
+        catch (Exception e)
+        {
+            log.error(StackTracer.toString(e));
+        }
+
+        BigDecimal balanceBank = this.accountService.getBalance(Constants.BANK_IBAN);
+        BigDecimal balancePeter = this.accountService.getBalance(Constants.PETER_IBAN_1);
+        BigDecimal remainingLimitBank = this.limitService.getRemainingLimit(Constants.BANK_USER_ID);
+        BigDecimal remainingLimitPeter = this.limitService.getRemainingLimit(Constants.PETER_USER_ID);
+        log.debug("Balance of {}: {}", Constants.BANK_IBAN, balanceBank.toString());
+        log.debug("Balance of {}: {}", Constants.PETER_IBAN_1, balancePeter.toString());
+        log.debug("Remaining limit of {}: {}", Constants.BANK_USER_ID, remainingLimitBank.toString());
+        log.debug("Remaining limit of {}: {}", Constants.PETER_USER_ID, remainingLimitPeter.toString());
+        assertThat(balanceBank).isEqualTo(origBalanceBank.subtract(amount));
+        assertThat(balancePeter).isEqualTo(origBalancePeter.add(amount));
+        assertThat(remainingLimitBank).isEqualTo(origRemainingLimitBank.subtract(amount));
+        assertThat(remainingLimitPeter).isEqualTo(origRemainingLimitPeter);
         this.giroService.dumpTransactions();
     }
 }

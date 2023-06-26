@@ -16,15 +16,8 @@
 
 package hu.perit.microorchestrator.services.model;
 
-import lombok.Data;
-
-import java.math.BigDecimal;
-
-@Data
-public class CreditTransferRequest
+public enum ForcedExceptionType
 {
-    private final String debitorIban;
-    private final String creditorIban;
-    private final BigDecimal amount;
-    private ForcedExceptionType forcedExceptionForTesting;
+    GIRO_EXCEPTION,
+    READ_TIMEOUT
 }

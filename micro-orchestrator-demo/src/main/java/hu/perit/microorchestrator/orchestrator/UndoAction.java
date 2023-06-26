@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-package hu.perit.microorchestrator.services.model;
+package hu.perit.microorchestrator.orchestrator;
 
-import lombok.Data;
-
-import java.math.BigDecimal;
-
-@Data
-public class CreditTransferRequest
+public interface UndoAction
 {
-    private final String debitorIban;
-    private final String creditorIban;
-    private final BigDecimal amount;
-    private ForcedExceptionType forcedExceptionForTesting;
+    void execute(Exception e);
 }
